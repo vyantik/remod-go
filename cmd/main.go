@@ -28,10 +28,6 @@ func main() {
 	go func() {
 		defer wg.Done()
 		reinitializeGitRepo(dir)
-		if strings.Contains(toChange, "github.com") {
-			repoHttpsLink := strings.Replace(toChange, "github.com", "https://github.com", 1)
-			exec.Command("git", "remote", "add", "origin", repoHttpsLink)
-		}
 	}()
 	checkDir(dir, toChange, modName)
 	wg.Wait()
