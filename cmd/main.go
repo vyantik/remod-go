@@ -110,6 +110,7 @@ func checkDir(dir string, toChange string, modName string) {
 		log.Fatalf("error reading directory: %v", err)
 	}
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, 10)
 	log.Printf("  [DIR]  %s\n", dir)
 	for _, file := range files {
 		if file.IsDir() {
@@ -118,10 +119,12 @@ func checkDir(dir string, toChange string, modName string) {
 				subDir := dir + "/" + file.Name()
 				if _, err := os.Stat(subDir); err == nil {
 					wg.Add(1)
-					go func() {
+					sem <- struct{}{}
+					go func(subDirPath string) {
 						defer wg.Done()
-						checkDir(subDir, toChange, modName)
-					}()
+						defer func() { <-sem }()
+						checkDir(subDirPath, toChange, modName)
+					}(subDir)
 				} else {
 					log.Printf("  [ERROR] Cannot access directory %s: %v\n", subDir, err)
 				}
